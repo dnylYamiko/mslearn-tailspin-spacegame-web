@@ -1,3 +1,4 @@
+
 trigger:
 - '*'
 
@@ -48,13 +49,26 @@ steps:
   inputs:
     SonarCloud: 'SonarCloud connection 1'
     organization: '$(SonarOrganization)'
+#<<<<<<< security-scan
     scannerMode: 'MSBuild'
+#=======
+#>>>>>>> master
     projectKey: '$(SonarProjectKey)'
     projectName: '$(SonarProjectName)'
     projectVersion: '$(Build.BuildNumber)'
     extraProperties: |
      sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/TestResults/Coverage/coverage.opencover.xml
      sonar.exclusions=**/wwwroot/lib/**/*
+#<<<<<<< security-scan
+#=======
+  condition: |
+    and
+    (
+      succeeded(),
+      eq(variables['Build.Reason'], 'PullRequest'),
+      eq(variables['System.PullRequest.TargetBranch'], 'master')
+    )
+#>>>>>>> master
 
 - task: DotNetCoreCLI@2
   displayName: 'Build the project - $(buildConfiguration)'
@@ -84,9 +98,29 @@ steps:
 
 - task: SonarCloudAnalyze@1
   displayName: 'Run SonarCloud code analysis'
+#<<<<<<< security-scan
 
 - task: SonarCloudPublish@1
   displayName: 'Publish SonarCloud quality gate results'
+#=======
+  condition: |
+    and
+    (
+      succeeded(),
+      eq(variables['Build.Reason'], 'PullRequest'),
+      eq(variables['System.PullRequest.TargetBranch'], 'master')
+    )
+ 
+- task: SonarCloudPublish@1
+  displayName: 'Publish SonarCloud quality gate results'
+  condition: |
+    and
+    (
+      succeeded(),
+      eq(variables['Build.Reason'], 'PullRequest'),
+      eq(variables['System.PullRequest.TargetBranch'], 'master')
+    )
+#>>>>>>> master
 
 - task: PublishCodeCoverageResults@1
   displayName: 'Publish code coverage report'
